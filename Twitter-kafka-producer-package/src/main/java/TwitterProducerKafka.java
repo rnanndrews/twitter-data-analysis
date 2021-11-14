@@ -8,6 +8,7 @@
 // *  Version 1: Base version of twitter kafka producer which retrieves tweets    * //
 // *             and pass it to kafka                                             * //
 //**********************************************************************************//
+
 import com.google.common.collect.Lists;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
@@ -23,6 +24,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
@@ -40,9 +42,9 @@ public class TwitterProducerKafka
     String sAPISecret = APISecret;
 
     //List of tags to search and retrieve tweets
-    List<String> lTweetTags = Lists.newArrayList("Pfizer","BioNTech","Moderna","JohnsonandJohnson"
-                                                         ,"JNJNews","Janssen","Corona","Covid"
-                                                         ,"vaccination","vaccine","antivaccine","antivax");
+   // List<String> lTweetTags = Lists.newArrayList("Pfizer","BioNTech","Moderna","JohnsonandJohnson"
+   //                                                      ,"JNJNews","Janssen","Corona","Covid"
+   //                                                      ,"vaccination","vaccine","antivaccine","antivax");
 
     public TwitterProducerKafka()
     {
@@ -51,18 +53,33 @@ public class TwitterProducerKafka
 
     public static void main(String[] args)
     {
-        new TwitterProducerKafka().startProducer();
+        List<String> lDynTags = Lists.newArrayList(Arrays.asList(args));
+        String sTopicName;
+
+        if(lDynTags.size() < 2)
+        {
+            System.out.println("Please provide topic name and tags. Atleast 2 parameters");
+        }
+        else
+        {
+            sTopicName = lDynTags.get(0);
+            System.out.println("Topic Name:"+sTopicName);
+            lDynTags.remove(0);
+            System.out.println("Twitter Tags:"+lDynTags);
+            new TwitterProducerKafka().startProducer(sTopicName, lDynTags);
+        }
+
     }
 
-    public void startProducer()
+    public void startProducer(String sTopicName, List lTweetTags)
     {
-        lLog.info("Process Started");
+        lLog.info("Process Started: Topic:"+sTopicName);
 
         /** Setting up blocking queues*/
         BlockingQueue<String> msgQueue = new LinkedBlockingQueue<String>(1000);
 
         // Create the twitter client
-        Client client = createTwitterClient(msgQueue);
+        Client client = createTwitterClient(msgQueue, lTweetTags);
         lLog.info("Twitter Client setup is completed");
 
         // Establish connection with API.
@@ -99,7 +116,7 @@ public class TwitterProducerKafka
             if (msg != null)
             {
                 lLog.info(msg);
-                producer.send(new ProducerRecord<>("Tweets_Topic", null, msg), new Callback() {
+                producer.send(new ProducerRecord<>(sTopicName, null, msg), new Callback() {
                     @Override
                     public void onCompletion(RecordMetadata recordMetadata, Exception e)
                     {
@@ -114,7 +131,7 @@ public class TwitterProducerKafka
         lLog.info("Application shutdown");
     }
 
-    public Client createTwitterClient(BlockingQueue<String> msgQueue)
+    public Client createTwitterClient(BlockingQueue<String> msgQueue, List lTweetTags)
     {
 
         Hosts hHosts = new HttpHosts(Constants.STREAM_HOST);
