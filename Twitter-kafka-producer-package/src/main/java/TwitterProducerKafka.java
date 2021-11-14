@@ -3,10 +3,16 @@
 // *  Date:25-Sep-2021                                                            * //
 // *  Description: This package uses the Twitter API to retrieve the tweets and   * //
 // *               send it to Kafka broker                                        * //
+// *  Input Parameters: 1. Topic Name                                             * //
+// *                    2. List of Tags for twitter                               * //
+// *  Sample: Tweets_topic covid corona pfizer moderna                            * //
 //**********************************************************************************//
 // *                        VERSION DETAILS                                       * //
 // *  Version 1: Base version of twitter kafka producer which retrieves tweets    * //
 // *             and pass it to kafka                                             * //
+//**********************************************************************************//
+// *  Version 2: Dynamic processing of topic and group. This enables the consumer * //
+// *             to be launched in multiple instance with differnt configuration  * //
 //**********************************************************************************//
 
 import com.google.common.collect.Lists;
